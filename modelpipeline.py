@@ -21,7 +21,7 @@ custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
 
 # Load the model with custom objects
 model = tf.keras.models.load_model(
-    r'D:\CS\TumorVision\efficientnetv2-s-BTI44impact-97.62.h5', 
+    'efficientnetv2-s-BTI44impact-97.62.h5', 
     custom_objects=custom_objects
 )
 model.compile(optimizer='Adamax', loss='categorical_crossentropy')  # Adjust the optimizer and loss as per your requirements
