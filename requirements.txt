@@ -5,5 +5,6 @@ streamlit-navigation-bar
 streamlit-extras
 requests
 matplotlib
-opencv-python
+Pillow
+opencv-python-headless
 tensorflow==2.12.0
