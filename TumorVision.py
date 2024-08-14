@@ -69,7 +69,7 @@ def show():
         with st.container(border=True):
             uploaded_file = st.file_uploader("Upload an MRI image of a brain to identify its tumor type.", type=["jpg", "png", "jpeg"])
             if uploaded_file is not None:
-                col4, col5, col6 = st.columns([1, 1, 1])
+                col4, col5, col6 = st.columns([0.25, 0.5, 0.25])
                 with col5:
                     st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
                     image = Image.open(uploaded_file).convert('RGB')
