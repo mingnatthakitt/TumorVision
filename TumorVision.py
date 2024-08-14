@@ -69,18 +69,20 @@ def show():
         with st.container(border=True):
             uploaded_file = st.file_uploader("Upload an MRI image of a brain to identify its tumor type.", type=["jpg", "png", "jpeg"])
             if uploaded_file is not None:
-                st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
-                image = Image.open(uploaded_file).convert('RGB')
-                image = image.resize((224, 224))  # Resize to match the model's input size
-                img_array = np.array(image)
-                img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+                col4, col5, col6 = st.columns([1, 1, 1])
+                with col5:
+                    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
+                    image = Image.open(uploaded_file).convert('RGB')
+                    image = image.resize((224, 224))  # Resize to match the model's input size
+                    img_array = np.array(image)
+                    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
-                st.write("Identifying...")
-                prediction1, prediction2, prediction3 = predict_and_display(img_array)
+                    #st.write("Identifying...")
+                    prediction1, prediction2, prediction3 = predict_and_display(img_array)
 
-                st.write(f"Prediction with Most Probability: {prediction1}")
-                st.write(f"Prediction with Second Most Probability: {prediction2}")
-                st.write(f"Prediction with Third Most Probability: {prediction3}")
+                    st.write(f"Prediction with Most Probability: :blue-background[{prediction1}]")
+                    st.write(f"Prediction with Second Most Probability: :green-background[{prediction2}]")
+                    st.write(f"Prediction with Third Most Probability: :orange-background[{prediction3}]")
     
     with col3:
         st.write("")
