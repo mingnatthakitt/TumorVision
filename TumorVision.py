@@ -65,7 +65,18 @@ def show():
 
     with col2:
         st.markdown("<h1 style='text-align: left; font:sans-serif; font-size: 40px; font-weight:bold; color:#3c6ca8;'>TumorVision <span style= color:black; >- Try our AI that identifies brain tumor types</span></h1>", unsafe_allow_html=True)
-        #st.write("Upload an MRI image of a brain to identify its tumor type.")
+        #Usage
+        st.write("### Steps to utilize our services")
+        st.write("""
+                - Step 1 : Upload the image, You can either drag and drop or browse through the files.
+                - Step 2 : Wait a few moments for the model to analyse.
+                - Step 3 : The model will output 3 results ranking from probabilities, and you're done.
+            """)
+
+
+
+
+
         with st.container(border=True):
             uploaded_file = st.file_uploader("Upload an MRI image of a brain to identify its tumor type.", type=["jpg", "png", "jpeg"])
             if uploaded_file is not None:
@@ -83,6 +94,8 @@ def show():
                     st.write(f"Prediction with Most Probability: :blue-background[{prediction1}]")
                     st.write(f"Prediction with Second Most Probability: :green-background[{prediction2}]")
                     st.write(f"Prediction with Third Most Probability: :orange-background[{prediction3}]")
+            else:
+                st.write("Waiting on MRI image upload")
     
     with col3:
         st.write("")

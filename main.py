@@ -6,12 +6,12 @@ import home
 import TumorVision
 import Tumorinfo
 
-st.set_page_config(page_title="TumorVision", layout="wide", page_icon="🧠"
+st.set_page_config(page_title="TumorVision", layout="wide", page_icon= "assets/TumorVisionLOGO-removebg.png"
                   )
 
 def load_nav_bar():
     pages = ["Home", "TumorVision","Tumorinfo"]
-    #logo_path = "assets/TumorVision.svg"
+    logo_path = "assets/TumorVisionLOGO.svg" 
     styles = {
         "nav": {
             "background-color": "white",
@@ -49,7 +49,7 @@ def load_nav_bar():
     page = st_navbar(
         pages,
         styles=styles,
-        #logo_path=logo_path,
+        logo_path=logo_path,
         options=options,
     )
     return page
