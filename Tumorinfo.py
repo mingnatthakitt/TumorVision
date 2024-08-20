@@ -62,12 +62,12 @@ def show():
 
         tumor_images = {
             "Astrocytoma": ["assets/tumorimages/path_to_astrocytoma_image1.jpg",     "assets/tumorimages/path_to_astrocytoma_image2.jpg", "assets/tumorimages/path_to_astrocytoma_image3.jpg"],
-            "Carcinoma": ["assets/tumorimages/path_to_carcinoma_image1.jpg", "assets/tumorimages/path_to_carcinoma_image2.jpg", "assets/tumorimages/path_to_carcinoma_image3.jpg"],
-            "Ependymoma": ["assets/tumorimages/path_to_ependymoma_image1.jpg", "assets/tumorimages/path_to_ependymoma_image2.jpg", "assets/tumorimages/path_to_ependymoma_image3.jpg"],
-            "Ganglioglioma": ["assets/tumorimages/path_to_ganglioglioma_image1.jpg", "assets/tumorimages/path_to_ganglioglioma_image2.jpg", "assets/tumorimages/path_to_ganglioglioma_image3.jpg"],
-            "Germinoma": ["assets/tumorimages/path_to_germinoma_image1.jpg", "assets/tumorimages/path_to_germinoma_image2.jpg", "assets/tumorimages/path_to_germinoma_image3.jpg"],
-            "Glioblastoma": ["assets/tumorimages/path_to_glioblastoma_image1.jpg", "assets/tumorimages/path_to_glioblastoma_image2.jpg", "assets/tumorimages/path_to_glioblastoma_image3.jpg"],
-            "Granuloma": ["assets/tumorimages/path_to_granuloma_image1.jpg", "assets/tumorimages/path_to_granuloma_image2.jpg", "assets/tumorimages/path_to_granuloma_image3.jpg"],
+            "Carcinoma": ["assets/tumorimages/path_to_carcinoma_image1.jpg", "assets/tumorimages/path_to_carcinoma_image2.jpg", "assets/tumorimages/path_to_carcinoma_image3.png"],
+            "Ependymoma": ["assets/tumorimages/path_to_ependymoma_image1.jpg", "assets/tumorimages/path_to_ependymoma_image2.png", "assets/tumorimages/path_to_ependymoma_image3.jpeg"],
+            "Ganglioglioma": ["assets/tumorimages/path_to_ganglioglioma_image1.jpeg", "assets/tumorimages/path_to_ganglioglioma_image2.jpg", "assets/tumorimages/path_to_ganglioglioma_image3.jpg"],
+            "Germinoma": ["assets/tumorimages/path_to_germinoma_image1.jpeg", "assets/tumorimages/path_to_germinoma_image2.jpeg", "assets/tumorimages/path_to_germinoma_image3.jpeg"],
+            "Glioblastoma": ["assets/tumorimages/path_to_glioblastoma_image1.jpeg", "assets/tumorimages/path_to_glioblastoma_image2.jpeg", "assets/tumorimages/path_to_glioblastoma_image3.jpeg"],
+            "Granuloma": ["assets/tumorimages/path_to_granuloma_image1.jpeg", "assets/tumorimages/path_to_granuloma_image2.jpg", "assets/tumorimages/path_to_granuloma_image3.jpg"],
             "Medulloblastoma": ["assets/tumorimages/path_to_medulloblastoma_image1.jpg", "assets/tumorimages/path_to_medulloblastoma_image2.jpg", "assets/tumorimages/path_to_medulloblastoma_image3.jpg"],
             "Meningioma": ["assets/tumorimages/path_to_meningioma_image1.jpg", "assets/tumorimages/path_to_meningioma_image2.jpg", "assets/tumorimages/path_to_meningioma_image3.jpg"],
             "Neurocytoma": ["assets/tumorimages/path_to_neurocytoma_image1.jpg", "assets/tumorimages/path_to_neurocytoma_image2.jpg", "assets/tumorimages/path_to_neurocytoma_image3.jpg"],
