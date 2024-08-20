@@ -1,1 +1,2 @@
 *.h5 filter=lfs diff=lfs merge=lfs -text
+efficientnetv2-s-BTI15-97.91.h5 filter=lfs diff=lfs merge=lfs -text
