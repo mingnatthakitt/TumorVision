@@ -1,8 +1,7 @@
 import streamlit as st
 import numpy as np
 from PIL import Image
-#Model Pipeline
-#import modelpipeline
+
 
 # Backend functions and libraries
 import os
@@ -25,22 +24,13 @@ custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
 
 # Load the model with custom objects
 model = tf.keras.models.load_model(
-    'efficientnetv2-s-BTI44impact-97.62.h5', 
+    'efficientnetv2-s-BTI15-97.91.h5', 
     custom_objects=custom_objects
 )
 model.compile(optimizer='Adamax', loss='categorical_crossentropy')  # Adjust the optimizer and loss as per your requirements
 
 # Class labels for predictions
-class_labels = [
-    'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2', 'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
-    'Ependimoma T1', 'Ependimoma T1C+', 'Ependimoma T2', 'Ganglioglioma T1', 'Ganglioglioma T1C+', 'Ganglioglioma T2',
-    'Germinoma T1', 'Germinoma T1C+', 'Germinoma T2', 'Glioblastoma T1', 'Glioblastoma T1C+', 'Glioblastoma T2',
-    'Granuloma T1', 'Granuloma T1C+', 'Granuloma T2', 'Meduloblastoma T1', 'Meduloblastoma T1C+', 'Meduloblastoma T2',
-    'Meningioma T1', 'Meningioma T1C+', 'Meningioma T2', 'Neurocitoma T1', 'Neurocitoma T1C+', 'Neurocitoma T2',
-    'Oligodendroglioma T1', 'Oligodendroglioma T1C+', 'Oligodendroglioma T2', 'Papiloma T1', 'Papiloma T1C+', 'Papiloma T2',
-    'Schwannoma T1', 'Schwannoma T1C+', 'Schwannoma T2', 'Tuberculoma T1', 'Tuberculoma T1C+', 'Tuberculoma T2',
-    '_NORMAL T1', '_NORMAL T2'
-]
+class_labels = ['Astrocitoma', 'Carcinoma', 'Ependimoma', 'Ganglioglioma', 'Germinoma', 'Glioblastoma', 'Granuloma', 'Meduloblastoma', 'Meningioma', 'Neurocitoma', 'Oligodendroglioma', 'Papiloma', 'Schwannoma', 'Tuberculoma', '_NORMAL']
 
 # Function to predict and display results
 def predict_and_display(img_array):
