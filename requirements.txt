@@ -1,0 +1,10 @@
+streamlit
+streamlit-option-menu
+streamlit-lottie
+streamlit-navigation-bar
+streamlit-extras
+requests
+matplotlib
+Pillow
+opencv-python-headless
+tensorflow==2.12.0
