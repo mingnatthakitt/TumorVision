@@ -73,17 +73,18 @@ def show():
                 col4, col5, col6 = st.columns([0.25, 0.5, 0.25])
                 with col5:
                     st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
-                    image = Image.open(uploaded_file).convert('RGB')
-                    image = image.resize((224, 224))  # Resize to match the model's input size
-                    img_array = np.array(image)
-                    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+                    with st.spinner('Analyzing...'):
+                        image = Image.open(uploaded_file).convert('RGB')
+                        image = image.resize((224, 224))  # Resize to match the model's input size
+                        img_array = np.array(image)
+                        img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
                     #st.write("Identifying...")
-                    prediction1, prediction2, prediction3 = predict_and_display(img_array)
+                        prediction1, prediction2, prediction3 = predict_and_display(img_array)
 
-                    st.write(f"Prediction with Most Probability: :blue-background[{prediction1}]")
-                    st.write(f"Prediction with Second Most Probability: :green-background[{prediction2}]")
-                    st.write(f"Prediction with Third Most Probability: :orange-background[{prediction3}]")
+                        st.write(f"Prediction with Most Probability: :blue-background[{prediction1}]")
+                        st.write(f"Prediction with Second Most Probability: :green-background[{prediction2}]")
+                        st.write(f"Prediction with Third Most Probability: :orange-background[{prediction3}]")
             else:
                 st.write("Waiting on MRI image upload")
     
