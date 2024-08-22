@@ -80,7 +80,7 @@ def show():
                         img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
 
                     #st.write("Identifying...")
-                        prediction1, prediction2, prediction3 = predict_and_display(img_array)
+                        predict_and_display(img_array) = prediction1, prediction2, prediction3
 
                         st.write(f"Prediction with Most Probability: :blue-background[{prediction1}]")
                         st.write(f"Prediction with Second Most Probability: :green-background[{prediction2}]")
