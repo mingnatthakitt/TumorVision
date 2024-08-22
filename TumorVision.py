@@ -72,8 +72,8 @@ def show():
             if uploaded_file is not None:
                 col4, col5, col6 = st.columns([0.25, 0.5, 0.25])
                 with col5:
-                    st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
                     with st.spinner('Analyzing...'):
+                        st.image(uploaded_file, caption="Uploaded Image.", use_column_width=True)
                         image = Image.open(uploaded_file).convert('RGB')
                         image = image.resize((224, 224))  # Resize to match the model's input size
                         img_array = np.array(image)
