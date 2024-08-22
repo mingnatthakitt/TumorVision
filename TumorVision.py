@@ -56,7 +56,7 @@ def show():
     with col2:
         st.markdown("<p style='text-align: left; font:sans-serif; font-size: 40px; font-weight:bold; color:#3c6ca8;'>TumorVision <span style= color:black; >- Try our AI that identifies brain tumor types</span></p>", unsafe_allow_html=True)
         #Usage
-        st.markdown("<p style='text-align: left; font:sans-serif; font-size: 27; font-weight:bold;'>Steps to utilize our services</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: left; font:sans-serif; font-size: 27px; font-weight:bold;'>Steps to utilize our services</p>", unsafe_allow_html=True)
         st.write("""
                 - Step 1 : Upload the image, You can either drag and drop or browse through the files.
                 - Step 2 : Wait a few moments for the model to analyse.
