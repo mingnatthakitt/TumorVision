@@ -18,6 +18,8 @@
 
 TumorVision is a state-of-the-art medical diagnostic platform designed to support healthcare professionals in identifying brain tumors from MRI scans. By combining advanced machine learning with a premium, user-centric interface, TumorVision provides rapid, accurate, and actionable insights.
 
+|<img width="70%" alt="image" src="https://github.com/user-attachments/assets/57f8d5be-e2da-462b-b4ca-e97bbe995066" />|
+| :---: |
 ---
 
 ## ✨ Key Features
