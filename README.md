@@ -1,12 +1,3 @@
----
-title: TumorVision
-emoji: 🧠
-colorFrom: purple
-colorTo: blue
-sdk: docker
-app_port: 7860
-pinned: false
----
 
 # <img src="frontend/public/TumorVisionLOGO-removebg.png" width="48" height="48" valign="middle"> TumorVision
 
@@ -22,8 +13,6 @@ pinned: false
     <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl-dark.svg" alt="Try our demo in Hugging Face Spaces">
   </a>
 </div>
-
-<br/>
 
 **Pioneering AI-Powered Brain Tumor Diagnostics.**
 
