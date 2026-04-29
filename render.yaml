@@ -1,29 +1,17 @@
 services:
-  # Backend Web Service (FastAPI)
   - type: web
-    name: tumorvision-api
+    name: tumorvision
     env: python
-    buildCommand: "pip install -r backend/requirements.txt"
+    # Build frontend first, then install backend deps
+    buildCommand: "cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt"
+    # Start the FastAPI server which now also serves the React frontend
     startCommand: "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.13
+      - key: NODE_VERSION
+        value: 20.10.0
       - key: TF_USE_LEGACY_KERAS
         value: "1"
       - key: CUDA_VISIBLE_DEVICES
         value: "-1"
-
-  # Frontend Static Site (Vite React)
-  - type: web
-    name: tumorvision-frontend
-    env: static
-    buildCommand: "cd frontend && npm install && npm run build"
-    staticPublishPath: frontend/dist
-    envVars:
-      - key: NODE_VERSION
-        value: 20.10.0
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: tumorvision-api
-          envVar: RENDER_EXTERNAL_URL

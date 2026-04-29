@@ -3,6 +3,9 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 import io
 from model_utils import predict_tumor, load_tumor_model
 
@@ -63,6 +66,24 @@ async def predict(file: UploadFile = File(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+
+
+# Serve static files from the frontend build directory
+# We look for ../frontend/dist relative to this file
+frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
+
+if os.path.exists(frontend_dist):
+    # Mount the static files (assets, etc.)
+    app.mount("/assets", StaticFiles(directory=os.path.join(frontend_dist, "assets")), name="assets")
+
+    # Serve the main index.html for all other routes to support React Router
+    @app.get("/{full_path:path}")
+    async def serve_frontend(full_path: str):
+        # Prevent API routes from being intercepted if they don't exist
+        if full_path.startswith("api/") or full_path in ["health", "predict"]:
+            raise HTTPException(status_code=404)
+        
+        return FileResponse(os.path.join(frontend_dist, "index.html"))
 
 
 if __name__ == "__main__":
