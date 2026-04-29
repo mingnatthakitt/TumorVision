@@ -2,8 +2,8 @@ services:
   - type: web
     name: tumorvision
     env: python
-    # Build frontend first, then install backend deps
-    buildCommand: "cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt"
+    # Pull LFS objects, build frontend, then install backend deps
+    buildCommand: "git lfs install && git lfs pull && cd frontend && npm install && npm run build && cd ../backend && pip install -r requirements.txt"
     # Start the FastAPI server which now also serves the React frontend
     startCommand: "cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
     envVars:
