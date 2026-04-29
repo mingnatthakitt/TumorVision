@@ -1,57 +1,75 @@
-# TumorVision
+# 🧠 TumorVision
 
-TumorVision is an AI-powered medical diagnostic tool built to assist healthcare professionals in identifying brain tumors from MRI scans. It uses an EfficientNetV2 model to classify tumors into 44 different categories with high accuracy.
+**Pioneering AI-Powered Brain Tumor Diagnostics.**
 
-## Architecture
+TumorVision is a state-of-the-art medical diagnostic platform designed to support healthcare professionals in identifying brain tumors from MRI scans. By combining advanced machine learning with a premium, user-centric interface, TumorVision provides rapid, accurate, and actionable insights.
 
-This project was recently reworked from a Streamlit monolith into a modern, decoupled stack:
+---
 
-- **Frontend:** React (Vite), TypeScript, Framer Motion, Vanilla CSS (Glassmorphism design)
-- **Backend:** FastAPI, TensorFlow/Keras, Python 3.10+
+## ✨ Key Features
 
-## Local Development
+### 🔬 Advanced AI Classification
+- **44-Class Model**: Leverages an **EfficientNetV2** deep learning architecture trained to recognize 44 distinct tumor signatures.
+- **Top-3 Prediction Engine**: Provides a ranked list of potential tumor types with real-time probability bars, ensuring clinicians have a comprehensive view of diagnostic possibilities.
+- **Legacy Keras Support**: Optimized for high-fidelity model loading and execution using specialized compatibility layers.
 
-We've provided a simple `Makefile` to handle all development tasks.
+### 🎨 Premium User Experience
+- **Futuristic Glassmorphism UI**: A stunning, dark-themed interface built with vanilla CSS for maximum performance and visual excellence.
+- **Interactive MRI Upload**: Advanced drag-and-drop zone with instant image preview and animated analysis states.
+- **Fluid Animations**: Smooth transitions and layout animations powered by **Framer Motion** for a professional, high-end feel.
+- **Fully Responsive**: Optimized for desktops, tablets, and mobile devices.
+
+### 📚 Medical Intelligence Database
+- **Searchable Encyclopedia**: A dedicated section covering 14 major brain tumor categories (including Astrocytoma, Glioblastoma, Meningioma, and more).
+- **Reference Library**: Over 40+ reference MRI images integrated to help users compare and learn about different tumor pathologies.
+
+### ⚙️ Unified Architecture
+- **Decoupled Modern Stack**: Built with **React (Vite)**, **TypeScript**, and **FastAPI**.
+- **Unified Deployment**: Specially configured for **Render.com** as a single-service deployment where the FastAPI backend serves the production-built React frontend.
+
+---
+
+## 🛠️ Technical Stack
+
+- **Frontend**: React 18, TypeScript, Vite, Framer Motion, Lucide Icons.
+- **Backend**: FastAPI (Python), TensorFlow/Keras, Uvicorn.
+- **DevOps**: Makefile, Git LFS, Render Blueprint (`render.yaml`).
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v20+)
-- Conda (Miniconda/Anaconda)
-- Git LFS
+- Python (3.10.x)
+- Conda (recommended)
 
-### 1. Setup Environment
+### Local Setup
+1. **Initialize Git LFS**:
+   ```bash
+   git lfs pull
+   ```
+2. **Install Dependencies**:
+   ```bash
+   make install
+   ```
+3. **Run Development Server**:
+   ```bash
+   make dev
+   ```
+   *The app will be available at `http://localhost:5173`.*
 
-First, ensure you have pulled the actual model files using Git LFS:
-```bash
-git lfs install
-git lfs pull
-```
+---
 
-Ensure your `efficientnetv2-s-BTI44impact-97.62.h5` model is placed in the `backend/models/` directory.
+## ☁️ Deployment
 
-Then, install all dependencies:
-```bash
-make install
-```
-*(This will install frontend npm packages and use `conda run` to install backend pip packages in the `tumorvision` environment).*
+This project is optimized for **Render.com**.
 
-### 2. Run the App
+1. Connect your repository to Render.
+2. Create a new **Web Service**.
+3. Render will automatically detect the `render.yaml` configuration and deploy your unified app.
 
-Start both the FastAPI backend and the Vite frontend simultaneously:
-```bash
-make dev
-```
-- Frontend will be available at `http://localhost:5173`
-- Backend API will be available at `http://localhost:8000`
-- API Documentation at `http://localhost:8000/docs`
+---
 
-## Deployment
-
-The app is configured to be deployed easily on **Render.com** using the provided `render.yaml` Blueprint.
-
-1. Connect your GitHub repository to Render
-2. Render will automatically detect the `render.yaml` file
-3. Two services will be created: `tumorvision-api` and `tumorvision-frontend`
-4. The frontend will automatically link to the backend via the `VITE_API_URL` environment variable.
-
-### Note on Keras Compatibility
-The backend forces `TF_USE_LEGACY_KERAS=1` to ensure compatibility between newer TensorFlow versions (2.16+) and the older `.h5` model format.
+## ⚖️ Disclaimer
+*This tool is intended for research and educational purposes to assist medical professionals. It should not be used as a standalone diagnostic tool for clinical decision-making.*
