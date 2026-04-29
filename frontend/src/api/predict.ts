@@ -1,4 +1,6 @@
-const API_BASE = import.meta.env.VITE_API_URL || `http://${window.location.hostname}:8000`;
+// In production, frontend is served by FastAPI on the same origin — use relative URLs
+// In dev, VITE_API_URL can point to the local backend (e.g. http://localhost:8000)
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export interface Prediction {
   rank: number;

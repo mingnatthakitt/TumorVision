@@ -1,14 +1,20 @@
 # Backend functions and libraries — ported from modelpipeline.py
 import os
+
+# ── CRITICAL: these must be set BEFORE importing tensorflow ──
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"       # Force CPU-only (no GPU on Render)
+os.environ["TF_USE_LEGACY_KERAS"] = "1"          # Use Keras 2 API for .h5 compat
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"         # Suppress TF info/warning spam
+
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
 from PIL import Image
 
-# Ensure TensorFlow uses CPU
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-# Force legacy Keras for compatibility with older .h5 models
-os.environ["TF_USE_LEGACY_KERAS"] = "1"
+# Import DepthwiseConv2D from the correct Keras backend
+try:
+    from tf_keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
+except ImportError:
+    from tensorflow.keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
 
 # Custom layer handling
 class CustomDepthwiseConv2D(OriginalDepthwiseConv2D):
@@ -62,15 +68,27 @@ def load_tumor_model():
         return
 
     try:
-        model = tf.keras.models.load_model(
-            MODEL_PATH,
-            custom_objects=custom_objects,
-            compile=False
-        )
-        model.compile(optimizer='Adamax', loss='categorical_crossentropy')
+        # Use tf_keras (Keras 2) if available — required for .h5 models saved with Keras 2
+        try:
+            import tf_keras
+            model = tf_keras.models.load_model(
+                MODEL_PATH,
+                custom_objects=custom_objects,
+                compile=False
+            )
+            model.compile(optimizer='Adamax', loss='categorical_crossentropy')
+        except ImportError:
+            model = tf.keras.models.load_model(
+                MODEL_PATH,
+                custom_objects=custom_objects,
+                compile=False
+            )
+            model.compile(optimizer='Adamax', loss='categorical_crossentropy')
         print(f"Model loaded successfully from {MODEL_PATH}")
     except Exception as e:
         print(f"Error loading model: {e}")
+        import traceback
+        traceback.print_exc()
         model = None
 
 

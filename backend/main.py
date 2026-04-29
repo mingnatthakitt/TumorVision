@@ -26,6 +26,7 @@ app.add_middleware(
         "http://localhost:5173",   # Vite dev server
         "http://localhost:4173",   # Vite preview
         "http://localhost:3000",   # Fallback
+        "https://*.hf.space",      # Hugging Face Spaces
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -69,6 +70,7 @@ async def predict(file: UploadFile = File(...)):
 
 
 # Serve static files from the frontend build directory
+# Works for both local dev (backend/../frontend/dist) and Docker (/home/user/app/frontend/dist)
 frontend_dist = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
 
 if os.path.exists(frontend_dist):
@@ -93,4 +95,5 @@ if os.path.exists(frontend_dist):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
