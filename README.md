@@ -10,11 +10,20 @@ pinned: false
 
 # <img src="frontend/public/TumorVisionLOGO-removebg.png" width="48" height="48" valign="middle"> TumorVision
 
+
 [![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/frontend-React-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/build-Vite-646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Render](https://img.shields.io/badge/deploy-Render-46E3B7.svg?style=flat&logo=render&logoColor=white)](https://render.com/)
+[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/mingnatthakitt/TumorVision)
+
+<div align="center">
+  <a href="https://huggingface.co/spaces/mingnatthakitt/TumorVision">
+    <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl-dark.svg" alt="Try our demo in Hugging Face Spaces">
+  </a>
+</div>
+
+<br/>
 
 **Pioneering AI-Powered Brain Tumor Diagnostics.**
 
@@ -41,7 +50,7 @@ TumorVision is a state-of-the-art medical diagnostic platform designed to suppor
 
 ### ⚙️ Unified Architecture
 - **Decoupled Modern Stack**: Built with **React (Vite)**, **TypeScript**, and **FastAPI**.
-- **Unified Deployment**: Specially configured for **Render.com** as a single-service deployment where the FastAPI backend serves the production-built React frontend.
+- **Unified Deployment**: Optimized for **Hugging Face Spaces** as a Docker-based deployment where the FastAPI backend serves the production-built React frontend.
 
 ---
 
@@ -49,7 +58,7 @@ TumorVision is a state-of-the-art medical diagnostic platform designed to suppor
 
 - **Frontend**: React 18, TypeScript, Vite, Framer Motion, Lucide Icons.
 - **Backend**: FastAPI (Python), TensorFlow/Keras, Uvicorn.
-- **DevOps**: Makefile, Git LFS, Render Blueprint (`render.yaml`).
+- **DevOps**: Docker, Git LFS, Makefile.
 
 ---
 
@@ -79,11 +88,12 @@ TumorVision is a state-of-the-art medical diagnostic platform designed to suppor
 
 ## ☁️ Deployment
 
-This project is optimized for **Render.com**.
+This project is deployed on **Hugging Face Spaces** using Docker.
 
-1. Connect your repository to Render.
-2. Create a new **Web Service**.
-3. Render will automatically detect the `render.yaml` configuration and deploy your unified app.
+1. **Prerequisites**: Ensure Git LFS is installed and tracking the model file.
+2. **Setup Space**: Create a new Docker Space on Hugging Face.
+3. **Push Code**: Push the repository (including the model file) to the Hugging Face remote.
+4. **Automatic Build**: Hugging Face will automatically build the Docker image and deploy the application.
 
 ---
 
