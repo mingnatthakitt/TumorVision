@@ -6,12 +6,17 @@
 [![FastAPI](https://img.shields.io/badge/backend-FastAPI-009688.svg?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/frontend-React-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/build-Vite-646CFF.svg?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/mingnatthakitt/TumorVision)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+[![Keras](https://img.shields.io/badge/Keras-D00000?style=flat&logo=keras&logoColor=white)](https://keras.io/)
+[![Kaggle Dataset](https://img.shields.io/badge/Kaggle-Dataset-20BEFF?style=flat&logo=Kaggle&logoColor=white)](https://www.kaggle.com/datasets/fernando2rad/brain-tumor-mri-images-44c)
 
 <div align="center">
+  <br/>
   <a href="https://huggingface.co/spaces/mingnatthakitt/TumorVision">
-    <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl-dark.svg" alt="Try our demo in Hugging Face Spaces">
+    <img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-xl-dark.svg" alt="Try our demo in Hugging Face Spaces" width="300px">
   </a>
+  <br/>
+  <br/>
 </div>
 
 **Pioneering AI-Powered Brain Tumor Diagnostics.**
@@ -37,6 +42,8 @@ TumorVision is a medical diagnostic platform designed to support healthcare prof
 <p align="center">
   <img src="docs/training/mri_samples.png" width="600" alt="MRI Samples" />
 </p>
+
+- **Dataset** from kaggle: https://www.kaggle.com/datasets/fernando2rad/brain-tumor-mri-images-44c
 
 ### 🎨 Premium User Experience
 - **Futuristic Glassmorphism UI**: A stunning, dark-themed interface built with vanilla CSS for maximum performance and visual excellence.
