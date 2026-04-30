@@ -64,14 +64,9 @@ The model takes a `224x224x3` MRI input, passes it through the EfficientNetV2-S 
 #### Performance Metrics & Technical Evaluation
 The model was rigorously evaluated across 44 distinct classes using a test set of 1,232 images. The high scores across all metrics demonstrate the model's reliability for clinical screening support.
 
-- **Overall Accuracy: 97%**
-- **Macro Average Precision: 98%**
-- **Macro Average Recall: 97%**
-- **Macro Average F1-Score: 97%**
-
 | Metric | Score | Description |
 | :--- | :--- | :--- |
-| **Accuracy** | **97.0%** | Overall correctness across all 44 tumor categories. |
+| **Accuracy** | **96.69%** | Overall correctness across all 44 tumor categories. |
 | **Precision** | **98.0%** | Reliability of positive predictions (minimizing False Positives). |
 | **Recall** | **97.0%** | Sensitivity to tumor detection (minimizing False Negatives). |
 | **F1-Score** | **97.0%** | Harmonic mean of Precision and Recall, reflecting overall robustness. |
