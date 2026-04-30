@@ -70,7 +70,7 @@ The model was rigorously evaluated across 44 distinct classes using a test set o
 | **F1-Score** | **97.0%** | Harmonic mean of Precision and Recall, reflecting overall robustness. |
 
 <p align="center">
-  <img src="docs/training/kfold_results.png" width="40%" />
+  <img src="docs/training/kfold_results.png" width="55%" />
   <img src="docs/training/confusion_matrix.png" width="40%" />
 </p>
 
