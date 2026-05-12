@@ -1,6 +1,5 @@
 import os
 import io
-import base64
 import torch
 import torchvision.transforms as T
 import numpy as np
@@ -25,13 +24,8 @@ custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
 
 # --- Model Configurations ---
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
-MODEL_44_PATH = os.path.join(MODEL_DIR, "brain_tumor_efficientnetv2_s_finetuned.h5")
-# The user might have renamed the file in the repo. Let's check the filename again.
-# In the old version it was "efficientnetv2-s-BTI44impact-97.62.h5".
-# I'll use a dynamic check.
 
-MODEL_17_PATH = os.path.join(MODEL_DIR, "brain_tumor_convnext_tiny_scripted.pt")
-
+# Full 44 Labels (As per stable v2.0)
 CLASS_LABELS_44 = [
     'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2',
     'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
@@ -50,6 +44,7 @@ CLASS_LABELS_44 = [
     '_NORMAL T1', '_NORMAL T2'
 ]
 
+# Full 17 Labels (As per stable v2.0)
 CLASS_LABELS_17 = [
     'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1',
     'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1C+',
@@ -92,19 +87,23 @@ def load_tumor_models():
     """Load both diagnostic models."""
     global model_44, model_17
     
-    # Identify actual filenames in the models directory
     if os.path.exists(MODEL_DIR):
         files = os.listdir(MODEL_DIR)
-        h5_files = [f for f in files if f.endswith('.h5')]
+        
+        # Load 44-class (TensorFlow)
+        h5_files = [f for f in files if f.endswith('.h5') and not f.startswith('.')]
         if h5_files:
             path_44 = os.path.join(MODEL_DIR, h5_files[0])
             try:
+                # Use compile=False to avoid issues, but we'll compile with original settings
                 model_44 = tf.keras.models.load_model(path_44, custom_objects=custom_objects, compile=False)
+                model_44.compile(optimizer='Adamax', loss='categorical_crossentropy')
                 print(f"Loaded 44-class model: {path_44}")
             except Exception as e:
                 print(f"Error loading 44-class model: {e}")
 
-        pt_files = [f for f in files if f.endswith('.pt')]
+        # Load 17-class (PyTorch)
+        pt_files = [f for f in files if f.endswith('.pt') and not f.startswith('.')]
         if pt_files:
             path_17 = os.path.join(MODEL_DIR, pt_files[0])
             try:
@@ -120,7 +119,7 @@ def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> di
     Runs MedGemma 1.5 4B for clinical verification using HF ZeroGPU.
     """
     global medgemma_processor, medgemma_model
-    from transformers import AutoProcessor, AutoModelForImageTextToText
+    from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
     import torch
     from PIL import Image
 
@@ -132,11 +131,16 @@ def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> di
             medgemma_processor = AutoProcessor.from_pretrained(model_id, token=hf_token)
 
         if medgemma_model is None:
+            # Use BitsAndBytesConfig for robust 4-bit loading
+            quant_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=torch.bfloat16
+            )
             medgemma_model = AutoModelForImageTextToText.from_pretrained(
                 model_id,
                 torch_dtype=torch.bfloat16,
                 device_map="auto",
-                load_in_4bit=True,
+                quantization_config=quant_config,
                 token=hf_token
             )
 
@@ -176,9 +180,12 @@ def predict_tumor(image_bytes: io.BytesIO, model_type: str = "44BTIS", run_verif
             img_res = img.resize((224, 224))
             img_array = np.array(img_res)
             img_array = np.expand_dims(img_array, axis=0)
+            
+            # EfficientNetV2 prediction
             preds = model_44.predict(img_array)[0]
             labels = CLASS_LABELS_44
         else:
+            # ConVext prediction (DON'T TOUCH)
             if model_17 is None: return {"error": "17-class model not loaded."}
             preprocess = T.Compose([
                 T.Resize((224, 224)),
