@@ -31,7 +31,39 @@ const tumorData17 = [
 
 function getImages(prefix: string, is17: boolean): string[] {
   if (is17) {
-    return [`/tumorimages/convext/${prefix}.jpg`];
+    const mappings: Record<string, string[]> = {
+      glioma: [
+        '/tumorimages/convext/glioma.jpg',
+        '/tumorimages/path_to_astrocytoma_image1.jpg',
+        '/tumorimages/path_to_ependymoma_image1.jpg'
+      ],
+      meningioma: [
+        '/tumorimages/convext/meningioma.jpg',
+        '/tumorimages/path_to_meningioma_image2.jpg',
+        '/tumorimages/path_to_meningioma_image3.jpg'
+      ],
+      neurocytoma: [
+        '/tumorimages/convext/neurocytoma.jpg',
+        '/tumorimages/path_to_neurocytoma_image2.jpg',
+        '/tumorimages/path_to_neurocytoma_image3.jpg'
+      ],
+      other: [
+        '/tumorimages/convext/other.jpg',
+        '/tumorimages/path_to_granuloma_image1.jpeg',
+        '/tumorimages/path_to_tuberculoma_image1.jpg'
+      ],
+      schwannoma: [
+        '/tumorimages/convext/schwannoma.jpg',
+        '/tumorimages/path_to_schwannoma_image2.jpg',
+        '/tumorimages/path_to_schwannoma_image3.jpg'
+      ],
+      normal: [
+        '/tumorimages/convext/normal.jpg',
+        '/tumorimages/convext/normal.jpg',
+        '/tumorimages/convext/normal.jpg'
+      ],
+    };
+    return mappings[prefix] || [`/tumorimages/convext/${prefix}.jpg`];
   }
   const exts: Record<string, string[]> = {
     astrocytoma: ['jpg', 'jpg', 'jpg'],
