@@ -3,11 +3,22 @@ import type { Prediction } from '../api/predict';
 
 interface Props {
   predictions: Prediction[];
-  verification?: string;
+  verification?: {
+    verified_answer: string;
+    explanation: string;
+  };
+  isLoadingVerification?: boolean;
+  onVerify?: () => void;
   model_used?: string;
 }
 
-export default function PredictionDisplay({ predictions, verification, model_used }: Props) {
+export default function PredictionDisplay({ 
+  predictions, 
+  verification, 
+  isLoadingVerification, 
+  onVerify, 
+  model_used 
+}: Props) {
   return (
     <motion.div
       className="prediction-card"
@@ -57,11 +68,23 @@ export default function PredictionDisplay({ predictions, verification, model_use
         })}
       </div>
 
-      {verification && (
+      {!verification && !isLoadingVerification && onVerify && (
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onVerify}
+          className="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold shadow-lg flex items-center justify-center gap-2"
+        >
+          <span>🔬</span>
+          Request MedGemma AI Verification
+        </motion.button>
+      )}
+
+      {(verification || isLoadingVerification) && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: 'auto' }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.2 }}
           style={{
             marginTop: 16,
             paddingTop: 24,
@@ -91,14 +114,32 @@ export default function PredictionDisplay({ predictions, verification, model_use
             borderRadius: 'var(--radius-md)',
             border: '1px solid rgba(255,215,0,0.1)'
           }}>
-            <p style={{ 
-              color: 'rgba(255,255,255,0.9)', 
-              fontSize: '0.9rem', 
-              lineHeight: 1.6,
-              whiteSpace: 'pre-wrap'
-            }}>
-              {verification}
-            </p>
+            {isLoadingVerification ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ height: 12, width: '90%', background: 'rgba(255,255,255,0.1)', borderRadius: 4 }} className="animate-pulse" />
+                <div style={{ height: 12, width: '100%', background: 'rgba(255,255,255,0.1)', borderRadius: 4 }} className="animate-pulse" />
+                <div style={{ height: 12, width: '80%', background: 'rgba(255,255,255,0.1)', borderRadius: 4 }} className="animate-pulse" />
+              </div>
+            ) : (
+              <>
+                <p style={{ 
+                  color: '#FFD700', 
+                  fontSize: '1rem', 
+                  fontWeight: 700,
+                  marginBottom: 8
+                }}>
+                  {verification?.verified_answer}
+                </p>
+                <p style={{ 
+                  color: 'rgba(255,255,255,0.9)', 
+                  fontSize: '0.85rem', 
+                  lineHeight: 1.6,
+                  fontStyle: 'italic'
+                }}>
+                  {verification?.explanation}
+                </p>
+              </>
+            )}
           </div>
         </motion.div>
       )}

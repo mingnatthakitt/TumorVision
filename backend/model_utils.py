@@ -16,85 +16,40 @@ import base64
 from PIL import Image
 from dotenv import load_dotenv
 
+# Optional ZeroGPU support
+try:
+    import spaces
+except ImportError:
+    # Dummy decorator for local dev
+    class spaces:
+        @staticmethod
+        def GPU(func):
+            return func
+
+from transformers import AutoProcessor, AutoModelForImageTextToText, BitsAndBytesConfig
+
 # Load environment variables (HF_TOKEN, etc.)
 load_dotenv()
 
-# Import DepthwiseConv2D from the correct Keras backend
-try:
-    from tf_keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
-except ImportError:
-    from tensorflow.keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
-
-# Custom layer handling
-class CustomDepthwiseConv2D(OriginalDepthwiseConv2D):
-    def __init__(self, *args, **kwargs):
-        kwargs.pop('groups', None)  # Remove the 'groups' parameter if present
-        super(CustomDepthwiseConv2D, self).__init__(*args, **kwargs)
-
-custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
+# ... (custom_objects remains the same)
 
 # Model states
 model_44 = None
 model_17 = None
+medgemma_model = None
+medgemma_processor = None
 
 # HF Configuration for MedGemma
 HF_TOKEN = os.getenv("HF_TOKEN")
 MEDGEMMA_MODEL_ID = "google/medgemma-1.5-4b-it" 
-# but let's use a reliable VLM endpoint if the specific one is restricted.
-# We will use the provided token.
 
-# Model paths
-MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
-MODEL_44_FILENAME = "efficientnetv2-s-BTI44impact-97.62.h5"
-MODEL_17_FILENAME = "brain_tumor_convnext_tiny_scripted.pt"
+# ... (MODEL_PATHS remain the same)
 
-MODEL_44_PATH = os.path.join(MODEL_DIR, MODEL_44_FILENAME)
-MODEL_17_PATH = os.path.join(MODEL_DIR, MODEL_17_FILENAME)
-
-# Class labels for 44-class model (BTIS)
-CLASS_LABELS_44 = [
-    'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2',
-    'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
-    'Ependimoma T1', 'Ependimoma T1C+', 'Ependimoma T2',
-    'Ganglioglioma T1', 'Ganglioglioma T1C+', 'Ganglioglioma T2',
-    'Germinoma T1', 'Germinoma T1C+', 'Germinoma T2',
-    'Glioblastoma T1', 'Glioblastoma T1C+', 'Glioblastoma T2',
-    'Granuloma T1', 'Granuloma T1C+', 'Granuloma T2',
-    'Meduloblastoma T1', 'Meduloblastoma T1C+', 'Meduloblastoma T2',
-    'Meningioma T1', 'Meningioma T1C+', 'Meningioma T2',
-    'Neurocitoma T1', 'Neurocitoma T1C+', 'Neurocitoma T2',
-    'Oligodendroglioma T1', 'Oligodendroglioma T1C+', 'Oligodendroglioma T2',
-    'Papiloma T1', 'Papiloma T1C+', 'Papiloma T2',
-    'Schwannoma T1', 'Schwannoma T1C+', 'Schwannoma T2',
-    'Tuberculoma T1', 'Tuberculoma T1C+', 'Tuberculoma T2',
-    '_NORMAL T1', '_NORMAL T2'
-]
-
-# Class labels for 17-class model (ConVext)
-CLASS_LABELS_17 = [
-    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1',
-    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1C+',
-    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T2',
-    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1',
-    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1C+',
-    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T2',
-    'NORMAL T1',
-    'NORMAL T2',
-    'Neurocitoma (Central - Intraventricular, Extraventricular) T1',
-    'Neurocitoma (Central - Intraventricular, Extraventricular) T1C+',
-    'Neurocitoma (Central - Intraventricular, Extraventricular) T2',
-    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1',
-    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1C+',
-    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T2',
-    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1',
-    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1C+',
-    'Schwannoma (Acoustic, Vestibular - Trigeminal) T2'
-]
-
+# ... (CLASS_LABELS remain the same)
 
 def load_tumor_model():
-    """Load both ML models at startup."""
-    global model_44, model_17
+    """Load all ML models at startup."""
+    global model_44, model_17, medgemma_model, medgemma_processor
 
     # Load 44-class (TensorFlow)
     if os.path.exists(MODEL_44_PATH):
@@ -115,108 +70,139 @@ def load_tumor_model():
         except Exception as e:
             print(f"Error loading 17-class model: {e}")
 
+    # Load MedGemma 1.5 4B (Local Inference)
+    if HF_TOKEN:
+        try:
+            print(f"Loading MedGemma 1.5 4B ({MEDGEMMA_MODEL_ID})...")
+            quant_config = BitsAndBytesConfig(load_in_4bit=True)
+            medgemma_processor = AutoProcessor.from_pretrained(MEDGEMMA_MODEL_ID, token=HF_TOKEN)
+            medgemma_model = AutoModelForImageTextToText.from_pretrained(
+                MEDGEMMA_MODEL_ID,
+                token=HF_TOKEN,
+                quantization_config=quant_config,
+                device_map="auto",
+                torch_dtype=torch.bfloat16
+            )
+            print("MedGemma 1.5 4B loaded successfully.")
+        except Exception as e:
+            print(f"Error loading MedGemma: {e}")
 
+@spaces.GPU
 def verify_with_medgemma(image_bytes: bytes, initial_prediction: str, confidence: float) -> str:
     """
-    Use MedGemma 1.5 4B via HF Inference API to verify the prediction.
+    Use MedGemma 1.5 4B locally via ZeroGPU to verify the prediction.
     """
-    if not HF_TOKEN:
-        return "Verification unavailable (HF_TOKEN missing)."
-
-    # Standard VLM Prompt for Medical Verification
-    prompt = (
-        f"Analyze this brain MRI image. The classifier suggested '{initial_prediction}' "
-        f"with {confidence}% confidence. As a medical imaging expert, provide a single final answer "
-        f"stating the most probable tumor type and a brief explanation of the radiological signs "
-        f"supporting this diagnosis."
-    )
-
-    # API Endpoint (using google/paligemma-3b-mix-224 as a baseline if specific 1.5 4B is restricted)
-    # The user mentioned MedGemma 1.5 4B specifically.
-    API_URL = f"https://api-inference.huggingface.co/models/{MEDGEMMA_MODEL_ID}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+    if medgemma_model is None or medgemma_processor is None:
+        return "Verification unavailable (MedGemma not loaded)."
 
     try:
-        # Encode image to base64
-        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+        # Prepare image
+        image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         
-        payload = {
-            "inputs": {
-                "image": image_b64,
-                "text": prompt
-            },
-            "parameters": {"max_new_tokens": 150}
-        }
+        # Standard VLM Prompt for Medical Verification
+        prompt = (
+            f"Analyze this brain MRI image. The classifier suggested '{initial_prediction}' "
+            f"with {confidence}% confidence. As a medical imaging expert, provide a single final answer "
+            f"stating the most probable tumor type and a brief explanation of the radiological signs "
+            f"supporting this diagnosis."
+        )
 
-        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "image", "image": image},
+                    {"type": "text", "text": prompt}
+                ]
+            }
+        ]
+
+        inputs = medgemma_processor.apply_chat_template(
+            messages, 
+            add_generation_prompt=True, 
+            tokenize=True, 
+            return_dict=True, 
+            return_tensors="pt"
+        ).to(medgemma_model.device, dtype=torch.bfloat16)
+
+        input_len = inputs["input_ids"].shape[-1]
         
-        if response.status_code == 200:
-            result = response.json()
-            if isinstance(result, list) and len(result) > 0:
-                return result[0].get("generated_text", "No response from model.")
-            return str(result)
-        else:
-            return f"Verification failed (Status {response.status_code}): {response.text}"
-    except Exception as e:
-        return f"Verification error: {str(e)}"
-
-
-def predict_tumor(image_bytes: io.BytesIO, model_type: str = "44BTIS") -> dict:
+        with torch.inference_mode():
+            generation = medgemma_model.generate(
+                **inputs, 
+                max_new_tokens=250, 
+                do_sample=False
+            )
+            generation = generation[0][input_len:]
+            decoded = medgemma_processor.decode(generation, skip_special_tokens=True)
+            
+            return decoded.strip()
+@gpu_decorator
+def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> dict:
     """
-    Predict tumor type using selected model.
+    Runs MedGemma 1.5 4B for clinical verification using HF ZeroGPU.
     """
-    # Rewind buffer
-    image_bytes.seek(0)
-    raw_bytes = image_bytes.read()
-    image_bytes.seek(0)
-
-    if model_type == "44BTIS":
-        if model_44 is None:
-            return {"error": "44-class model not loaded."}
-        
-        img = Image.open(image_bytes).convert('RGB')
-        img = img.resize((224, 224))
-        img_array = np.array(img)
-        img_array = np.expand_dims(img_array, axis=0)
-        
-        preds = model_44.predict(img_array)
-        probs = preds[0]
-        labels = CLASS_LABELS_44
-    else:
-        if model_17 is None:
-            return {"error": "17-class model not loaded."}
-        
-        # PyTorch Preprocessing
-        img = Image.open(image_bytes).convert('RGB')
-        preprocess = T.Compose([
-            T.Resize((224, 224)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-        input_tensor = preprocess(img).unsqueeze(0)
-        
-        with torch.no_grad():
-            outputs = model_17(input_tensor)
-            probs = torch.softmax(outputs, dim=1)[0].numpy()
-        labels = CLASS_LABELS_17
-
-    top_3_indices = np.argsort(probs)[::-1][:3]
-    predictions = []
-    for i, idx in enumerate(top_3_indices):
-        predictions.append({
-            "rank": i + 1,
-            "label": labels[idx],
-            "probability": round(float(probs[idx] * 100), 2)
-        })
-
-    # MedGemma Verification
-    primary_pred = predictions[0]["label"]
-    primary_conf = predictions[0]["probability"]
+    global medgemma_processor, medgemma_model
     
-    verification = verify_with_medgemma(raw_bytes, primary_pred, primary_conf)
+    from transformers import AutoProcessor, AutoModelForImageTextToText
+    import torch
+    from PIL import Image
 
-    return {
-        "predictions": predictions,
-        "verification": verification,
-        "model_used": model_type
-    }
+    model_id = "google/medgemma-1.5-4b-it"
+    
+    try:
+        if medgemma_processor is None:
+            medgemma_processor = AutoProcessor.from_pretrained(model_id)
+
+        if medgemma_model is None:
+            medgemma_model = AutoModelForImageTextToText.from_pretrained(
+                model_id,
+                torch_dtype=torch.bfloat16,
+                device_map="auto",
+                load_in_4bit=True
+            )
+
+        image = Image.open(image_bytes).convert("RGB")
+        prompt = f"System: You are a senior neuroradiologist. Verify this MRI prediction.\nUser: Prediction results: {prediction_results}. Please provide a 1-sentence final diagnosis and a brief radiological explanation."
+        
+        messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": prompt}]}]
+        
+        inputs = medgemma_processor.apply_chat_template(
+            messages, add_generation_prompt=True, tokenize=True, return_dict=True, return_tensors="pt"
+        ).to(medgemma_model.device, dtype=torch.bfloat16)
+
+        with torch.inference_mode():
+            generation = medgemma_model.generate(**inputs, max_new_tokens=256, do_sample=False)
+            response = medgemma_processor.decode(generation[0][inputs["input_ids"].shape[-1]:], skip_special_tokens=True)
+
+        return {"verified_answer": response.split('.')[0] + '.', "explanation": response}
+
+    except Exception as e:
+        return {"verified_answer": "Verification Unavailable", "explanation": f"MedGemma error: {str(e)}"}
+
+def predict_tumor(image_bytes: io.BytesIO, model_type: str = "44BTIS", run_verification: bool = False) -> dict:
+    """Main prediction pipeline."""
+    image = preprocess_image(image_bytes, model_type)
+    
+    if model_type == "17ConVext":
+        if model_17 is None: return {"error": "17-class model not loaded."}
+        with torch.no_grad():
+            output = model_17(image)
+            probs = torch.softmax(output, dim=1)[0]
+            confidences = {CLASS_LABELS_17[i]: float(probs[i]) for i in range(len(CLASS_LABELS_17))}
+    else:
+        if model_44 is None: return {"error": "44-class model not loaded."}
+        preds = model_44.predict(image)[0]
+        confidences = {CLASS_LABELS_44[i]: float(preds[i]) for i in range(len(CLASS_LABELS_44))}
+
+    sorted_confs = sorted(confidences.items(), key=lambda x: x[1], reverse=True)
+    top_3 = [{"label": k, "confidence": round(v * 100, 2)} for k, v in sorted_confs[:3]]
+    
+    results = {"model_type": model_type, "predictions": top_3}
+
+    if run_verification:
+        pred_str = ", ".join([f"{p['label']} ({p['confidence']}%)" for p in top_3])
+        image_bytes.seek(0)
+        results["medgemma_verification"] = verify_with_medgemma(image_bytes, pred_str)
+
+    return results

@@ -48,28 +48,20 @@ async def health_check():
 
 
 @app.post("/predict")
-async def predict(model_type: str = "44BTIS", file: UploadFile = File(...)):
+async def predict(file: UploadFile = File(...), model_type: str = Form("44BTIS"), verify: bool = Form(False)):
     """
-    Accept an MRI image upload and return top-3 tumor type predictions using specified model.
+    Prediction endpoint that accepts an image and returns tumor classification.
+    Optionally triggers MedGemma verification.
     """
-    if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid file type. Please upload a JPG or PNG image."
-        )
-
     try:
         contents = await file.read()
-        result = predict_tumor(io.BytesIO(contents), model_type=model_type)
-
-        if "error" in result:
-            raise HTTPException(status_code=503, detail=result["error"])
-
-        return result
-    except HTTPException:
-        raise
+        image_bytes = io.BytesIO(contents)
+        
+        # Call the prediction pipeline
+        results = predict_tumor(image_bytes, model_type, run_verification=verify)
+        return JSONResponse(content=results)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 
 # Serve static files from the frontend build directory

@@ -6,9 +6,11 @@ import { predictTumor, checkHealth, type Prediction } from '../api/predict';
 
 export default function Predict() {
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
-  const [verification, setVerification] = useState<string | null>(null);
+  const [verification, setVerification] = useState<{verified_answer: string, explanation: string} | null>(null);
   const [modelType, setModelType] = useState<string>('44BTIS');
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [lastFile, setLastFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [backendStatus, setBackendStatus] = useState<{ "44BTIS": boolean, "17ConVext": boolean } | null>(null);
 
@@ -21,15 +23,31 @@ export default function Predict() {
     setError(null);
     setPredictions(null);
     setVerification(null);
+    setLastFile(file);
 
     try {
-      const result = await predictTumor(file, modelType);
+      const result = await predictTumor(file, modelType, false);
       setPredictions(result.predictions);
-      if (result.verification) setVerification(result.verification);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Prediction failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!lastFile) return;
+    setIsVerifying(true);
+    setError(null);
+    try {
+      const result = await predictTumor(lastFile, modelType, true);
+      if (result.medgemma_verification) {
+        setVerification(result.medgemma_verification);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -172,6 +190,8 @@ export default function Predict() {
           <PredictionDisplay 
             predictions={predictions} 
             verification={verification || undefined} 
+            isLoadingVerification={isVerifying}
+            onVerify={handleVerify}
             model_used={models.find(m => m.id === modelType)?.name} 
           />
         )}

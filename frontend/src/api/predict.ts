@@ -14,11 +14,17 @@ export interface PredictionResponse {
   model_used?: string;
 }
 
-export async function predictTumor(file: File, modelType: string = '44BTIS'): Promise<PredictionResponse> {
+export async function predictTumor(
+  imageFile: File,
+  modelType: string = '44BTIS',
+  verify: boolean = false
+): Promise<PredictionResponse> {
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('file', imageFile);
+  formData.append('model_type', modelType);
+  formData.append('verify', String(verify));
 
-  const response = await fetch(`${API_BASE}/predict?model_type=${modelType}`, {
+  const response = await fetch(`${API_BASE}/predict`, {
     method: 'POST',
     body: formData,
   });
