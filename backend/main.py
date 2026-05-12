@@ -1,19 +1,19 @@
 """TumorVision FastAPI Backend — serves ML predictions for brain tumor classification."""
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 import os
 import io
-from model_utils import predict_tumor, load_tumor_model
+from model_utils import predict_tumor, load_tumor_models
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load the ML model on startup."""
-    load_tumor_model()
+    load_tumor_models()
     yield
 
 
