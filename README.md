@@ -181,14 +181,15 @@ The model follows a deep transfer learning approach with a custom classification
   <img src="docs/training/model_architecture.png" width="450" alt="Model Architecture" />
 </p>
 
-<<<<<<< HEAD
 #### Performance Metrics & Technical Evaluation
 The model was rigorously evaluated across 44 distinct classes using a test set of 1,232 images. The high scores across all metrics demonstrate the model's reliability for clinical screening support.
-=======
+
+---
+
 #### Performance Metrics
 - **Overall Accuracy: 97.0%**
 - **Validation**: 96.69% average accuracy achieved via 5-fold cross-validation.
->>>>>>> 2a019ac (Upgrade: Dual-model support (ConVext) and MedGemma verification)
+
 
 | Metric | Score | Description |
 | :--- | :--- | :--- |
@@ -264,8 +265,8 @@ Oligodendroglioma T1C+       1.00      1.00      1.00        28
 <br/>
 
 ### 📚 Medical Intelligence Database
-- **Searchable Encyclopedia**: A dedicated section covering 14 major brain tumor categories (including Astrocytoma, Glioblastoma, Meningioma, and more).
-- **Reference Library**: Over 40+ reference MRI images integrated to help users compare and learn about different tumor pathologies.
+- **Searchable Encyclopedia**: A dual-tab encyclopedia detailing both the 44-class (BTIS) specific pathologies and the 17-class (ConVext) broad diagnostic groups (including Gliomas, Meningiomas, Neurocytomas, Schwannomas, and other injuries).
+- **Reference Library**: Extensive reference MRI images integrated to help users compare and learn about different tumor pathologies across both classification schemas.
 
 ### 🛠️ Unified Architecture
 - **Decoupled Modern Stack**: Built with **React (Vite)**, **TypeScript**, and **FastAPI**.
