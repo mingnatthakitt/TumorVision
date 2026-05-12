@@ -171,10 +171,11 @@ The model follows a deep transfer learning approach with a custom classification
   <img src="docs/training/model_architecture.png" width="450" alt="Model Architecture" />
 </p>
 
-<<<<<<< HEAD
 #### Performance Metrics & Technical Evaluation
 The model was rigorously evaluated across 44 distinct classes using a test set of 1,232 images. The high scores across all metrics demonstrate the model's reliability for clinical screening support.
-=======
+
+---
+
 #### Performance Metrics
 - **Overall Accuracy: 97.0%**
 - **Validation**: 96.69% average accuracy achieved via 5-fold cross-validation.
