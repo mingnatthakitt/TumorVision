@@ -1,5 +1,6 @@
 # Backend functions and libraries — ported from modelpipeline.py
 import os
+import io
 
 # ── CRITICAL: these must be set BEFORE importing tensorflow ──
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"       # Force CPU-only (no GPU on Render)
@@ -8,7 +9,15 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"         # Suppress TF info/warning spam
 
 import numpy as np
 import tensorflow as tf
+import torch
+import torchvision.transforms as T
+import requests
+import base64
 from PIL import Image
+from dotenv import load_dotenv
+
+# Load environment variables (HF_TOKEN, etc.)
+load_dotenv()
 
 # Import DepthwiseConv2D from the correct Keras backend
 try:
@@ -24,16 +33,26 @@ class CustomDepthwiseConv2D(OriginalDepthwiseConv2D):
 
 custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
 
-# Model state
-model = None
+# Model states
+model_44 = None
+model_17 = None
 
-# Model path — resolve relative to this file
+# HF Configuration for MedGemma
+HF_TOKEN = os.getenv("HF_TOKEN")
+MEDGEMMA_MODEL_ID = "google/medgemma-1.5-4b-it" 
+# but let's use a reliable VLM endpoint if the specific one is restricted.
+# We will use the provided token.
+
+# Model paths
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
-MODEL_FILENAME = "efficientnetv2-s-BTI44impact-97.62.h5"
-MODEL_PATH = os.path.join(MODEL_DIR, MODEL_FILENAME)
+MODEL_44_FILENAME = "efficientnetv2-s-BTI44impact-97.62.h5"
+MODEL_17_FILENAME = "brain_tumor_convnext_tiny_scripted.pt"
 
-# Class labels for predictions (44 classes — BTI44impact model)
-CLASS_LABELS = [
+MODEL_44_PATH = os.path.join(MODEL_DIR, MODEL_44_FILENAME)
+MODEL_17_PATH = os.path.join(MODEL_DIR, MODEL_17_FILENAME)
+
+# Class labels for 44-class model (BTIS)
+CLASS_LABELS_44 = [
     'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2',
     'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
     'Ependimoma T1', 'Ependimoma T1C+', 'Ependimoma T2',
@@ -51,73 +70,153 @@ CLASS_LABELS = [
     '_NORMAL T1', '_NORMAL T2'
 ]
 
+# Class labels for 17-class model (ConVext)
+CLASS_LABELS_17 = [
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1',
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1C+',
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T2',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1C+',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T2',
+    'NORMAL T1',
+    'NORMAL T2',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T1',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T1C+',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T2',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1C+',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T2',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1C+',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T2'
+]
+
 
 def load_tumor_model():
-    """Load the EfficientNetV2 model at startup."""
-    global model
+    """Load both ML models at startup."""
+    global model_44, model_17
 
-    if not os.path.exists(MODEL_PATH):
-        print(f"Warning: Model file not found at {MODEL_PATH}")
-        print(f"Please place '{MODEL_FILENAME}' in the '{MODEL_DIR}' directory.")
-        return
-
-    file_size = os.path.getsize(MODEL_PATH)
-    if file_size < 1024:
-        print(f"Warning: Model file appears to be a Git LFS pointer ({file_size} bytes).")
-        print("Run 'git lfs pull' to download the actual model data.")
-        return
-
-    try:
-        # Use tf_keras (Keras 2) if available — required for .h5 models saved with Keras 2
+    # Load 44-class (TensorFlow)
+    if os.path.exists(MODEL_44_PATH):
         try:
             import tf_keras
-            model = tf_keras.models.load_model(
-                MODEL_PATH,
-                custom_objects=custom_objects,
-                compile=False
-            )
-            model.compile(optimizer='Adamax', loss='categorical_crossentropy')
-        except ImportError:
-            model = tf.keras.models.load_model(
-                MODEL_PATH,
-                custom_objects=custom_objects,
-                compile=False
-            )
-            model.compile(optimizer='Adamax', loss='categorical_crossentropy')
-        print(f"Model loaded successfully from {MODEL_PATH}")
+            model_44 = tf_keras.models.load_model(MODEL_44_PATH, custom_objects=custom_objects, compile=False)
+            model_44.compile(optimizer='Adamax', loss='categorical_crossentropy')
+            print(f"44-class model loaded from {MODEL_44_PATH}")
+        except Exception as e:
+            print(f"Error loading 44-class model: {e}")
+
+    # Load 17-class (PyTorch Scripted)
+    if os.path.exists(MODEL_17_PATH):
+        try:
+            model_17 = torch.jit.load(MODEL_17_PATH)
+            model_17.eval()
+            print(f"17-class model loaded from {MODEL_17_PATH}")
+        except Exception as e:
+            print(f"Error loading 17-class model: {e}")
+
+
+def verify_with_medgemma(image_bytes: bytes, initial_prediction: str, confidence: float) -> str:
+    """
+    Use MedGemma 1.5 4B via HF Inference API to verify the prediction.
+    """
+    if not HF_TOKEN:
+        return "Verification unavailable (HF_TOKEN missing)."
+
+    # Standard VLM Prompt for Medical Verification
+    prompt = (
+        f"Analyze this brain MRI image. The classifier suggested '{initial_prediction}' "
+        f"with {confidence}% confidence. As a medical imaging expert, provide a single final answer "
+        f"stating the most probable tumor type and a brief explanation of the radiological signs "
+        f"supporting this diagnosis."
+    )
+
+    # API Endpoint (using google/paligemma-3b-mix-224 as a baseline if specific 1.5 4B is restricted)
+    # The user mentioned MedGemma 1.5 4B specifically.
+    API_URL = f"https://api-inference.huggingface.co/models/{MEDGEMMA_MODEL_ID}"
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
+
+    try:
+        # Encode image to base64
+        image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+        
+        payload = {
+            "inputs": {
+                "image": image_b64,
+                "text": prompt
+            },
+            "parameters": {"max_new_tokens": 150}
+        }
+
+        response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
+        
+        if response.status_code == 200:
+            result = response.json()
+            if isinstance(result, list) and len(result) > 0:
+                return result[0].get("generated_text", "No response from model.")
+            return str(result)
+        else:
+            return f"Verification failed (Status {response.status_code}): {response.text}"
     except Exception as e:
-        print(f"Error loading model: {e}")
-        import traceback
-        traceback.print_exc()
-        model = None
+        return f"Verification error: {str(e)}"
 
 
-def predict_tumor(image_bytes: bytes) -> dict:
+def predict_tumor(image_bytes: io.BytesIO, model_type: str = "44BTIS") -> dict:
     """
-    Predict tumor type from image bytes.
-    Returns top-3 predictions with probabilities.
+    Predict tumor type using selected model.
     """
-    if model is None:
-        return {"error": "Model not loaded. Check server logs."}
+    # Rewind buffer
+    image_bytes.seek(0)
+    raw_bytes = image_bytes.read()
+    image_bytes.seek(0)
 
-    # Preprocess — same pipeline as original TumorVision.py
-    img = Image.open(image_bytes).convert('RGB')
-    img = img.resize((224, 224))
-    img_array = np.array(img)
-    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    if model_type == "44BTIS":
+        if model_44 is None:
+            return {"error": "44-class model not loaded."}
+        
+        img = Image.open(image_bytes).convert('RGB')
+        img = img.resize((224, 224))
+        img_array = np.array(img)
+        img_array = np.expand_dims(img_array, axis=0)
+        
+        preds = model_44.predict(img_array)
+        probs = preds[0]
+        labels = CLASS_LABELS_44
+    else:
+        if model_17 is None:
+            return {"error": "17-class model not loaded."}
+        
+        # PyTorch Preprocessing
+        img = Image.open(image_bytes).convert('RGB')
+        preprocess = T.Compose([
+            T.Resize((224, 224)),
+            T.ToTensor(),
+            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        ])
+        input_tensor = preprocess(img).unsqueeze(0)
+        
+        with torch.no_grad():
+            outputs = model_17(input_tensor)
+            probs = torch.softmax(outputs, dim=1)[0].numpy()
+        labels = CLASS_LABELS_17
 
-    # Predict
-    preds = model.predict(img_array)
-    probabilities = preds[0]
-    top_3_indices = np.argsort(probabilities)[::-1][:3]
-    top_3_probabilities = probabilities[top_3_indices] * 100
-
+    top_3_indices = np.argsort(probs)[::-1][:3]
     predictions = []
     for i, idx in enumerate(top_3_indices):
         predictions.append({
             "rank": i + 1,
-            "label": CLASS_LABELS[idx],
-            "probability": round(float(top_3_probabilities[i]), 2)
+            "label": labels[idx],
+            "probability": round(float(probs[idx] * 100), 2)
         })
 
-    return {"predictions": predictions}
+    # MedGemma Verification
+    primary_pred = predictions[0]["label"]
+    primary_conf = predictions[0]["probability"]
+    
+    verification = verify_with_medgemma(raw_bytes, primary_pred, primary_conf)
+
+    return {
+        "predictions": predictions,
+        "verification": verification,
+        "model_used": model_type
+    }

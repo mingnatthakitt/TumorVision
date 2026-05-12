@@ -6,28 +6,47 @@ import { predictTumor, checkHealth, type Prediction } from '../api/predict';
 
 export default function Predict() {
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
+  const [verification, setVerification] = useState<string | null>(null);
+  const [modelType, setModelType] = useState<string>('44BTIS');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+  const [backendStatus, setBackendStatus] = useState<{ "44BTIS": boolean, "17ConVext": boolean } | null>(null);
 
   useEffect(() => {
-    checkHealth().then(setBackendOnline);
+    checkHealth().then(setBackendStatus);
   }, []);
 
   const handleFileSelect = async (file: File) => {
     setIsLoading(true);
     setError(null);
     setPredictions(null);
+    setVerification(null);
 
     try {
-      const result = await predictTumor(file);
+      const result = await predictTumor(file, modelType);
       setPredictions(result.predictions);
+      if (result.verification) setVerification(result.verification);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Prediction failed');
     } finally {
       setIsLoading(false);
     }
   };
+
+  const models = [
+    { 
+      id: '44BTIS', 
+      name: '44-Class BTIS', 
+      pros: 'Specific diagnostic mapping (44 types)', 
+      cons: 'Prone to false positives in edge cases' 
+    },
+    { 
+      id: '17ConVext', 
+      name: '17-Class ConVext', 
+      pros: 'Better generalization, higher stability', 
+      cons: 'Grouped classes (less granular)' 
+    }
+  ];
 
   return (
     <section className="section">
@@ -40,16 +59,53 @@ export default function Predict() {
             <h1 className="section-title" style={{ marginBottom: 0 }}>
               <span className="accent-text">TumorVision</span> — AI Detection
             </h1>
-            {backendOnline !== null && (
+            {backendStatus && (
               <span
-                className={`status-dot ${backendOnline ? 'online' : 'offline'}`}
-                title={backendOnline ? 'Model loaded' : 'Backend offline'}
+                className={`status-dot ${backendStatus[modelType as keyof typeof backendStatus] ? 'online' : 'offline'}`}
+                title={backendStatus[modelType as keyof typeof backendStatus] ? 'Model loaded' : 'Backend offline'}
               />
             )}
           </div>
-          <p className="section-subtitle" style={{ marginBottom: 32 }}>
+          <p className="section-subtitle" style={{ marginBottom: 24 }}>
             Upload a brain MRI scan to identify tumor types using our AI model
           </p>
+        </motion.div>
+
+        {/* Model Selection */}
+        <motion.div
+          className="model-selector"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '12px',
+            marginBottom: '32px'
+          }}
+        >
+          {models.map((m) => (
+            <div
+              key={m.id}
+              onClick={() => setModelType(m.id)}
+              style={{
+                padding: '16px',
+                borderRadius: 'var(--radius-md)',
+                background: modelType === m.id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.03)',
+                border: `1px solid ${modelType === m.id ? 'var(--accent-color)' : 'rgba(255,255,255,0.1)'}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                position: 'relative'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.name}</span>
+                {modelType === m.id && <span style={{ color: 'var(--accent-color)', fontSize: '0.8rem' }}>● Active</span>}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: 2 }}>✓ {m.pros}</div>
+              <div style={{ fontSize: '0.75rem', color: '#f87171' }}>✗ {m.cons}</div>
+            </div>
+          ))}
         </motion.div>
 
         {/* Steps */}
@@ -112,7 +168,13 @@ export default function Predict() {
         )}
 
         {/* Results */}
-        {predictions && <PredictionDisplay predictions={predictions} />}
+        {predictions && (
+          <PredictionDisplay 
+            predictions={predictions} 
+            verification={verification || undefined} 
+            model_used={models.find(m => m.id === modelType)?.name} 
+          />
+        )}
       </div>
     </section>
   );

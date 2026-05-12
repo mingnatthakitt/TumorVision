@@ -37,17 +37,20 @@ app.add_middleware(
 @app.get("/health")
 async def health_check():
     """Health check endpoint for frontend connectivity and Render.com."""
-    from model_utils import model
+    from model_utils import model_44, model_17
     return {
         "status": "healthy",
-        "model_loaded": model is not None
+        "models": {
+            "44BTIS": model_44 is not None,
+            "17ConVext": model_17 is not None
+        }
     }
 
 
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(model_type: str = "44BTIS", file: UploadFile = File(...)):
     """
-    Accept an MRI image upload and return top-3 tumor type predictions.
+    Accept an MRI image upload and return top-3 tumor type predictions using specified model.
     """
     if file.content_type not in ["image/jpeg", "image/png", "image/jpg"]:
         raise HTTPException(
@@ -57,7 +60,7 @@ async def predict(file: UploadFile = File(...)):
 
     try:
         contents = await file.read()
-        result = predict_tumor(io.BytesIO(contents))
+        result = predict_tumor(io.BytesIO(contents), model_type=model_type)
 
         if "error" in result:
             raise HTTPException(status_code=503, detail=result["error"])

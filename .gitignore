@@ -28,3 +28,6 @@ Thumbs.db
 
 # Keep models directory structure
 !backend/models/.gitkeep
+BrainTumorAnalysis/
+BrainTumorAnalysis/
+BrainTumorAnalysis.zip

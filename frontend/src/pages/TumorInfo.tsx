@@ -20,7 +20,19 @@ const tumorData = [
   { name: 'Tuberculoma', desc: 'A granulomatous lesion caused by the Mycobacterium tuberculosis infection, most commonly found in the brain or lungs. Tuberculomas can cause symptoms depending on their location.', prefix: 'tuberculoma' },
 ];
 
-function getImages(prefix: string): string[] {
+const tumorData17 = [
+  { name: 'Glioma', desc: 'A broad category of tumors that occur in the brain and spinal cord, including Astrocytoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, and Ependymoma. The ConVext model groups these for improved generalization.', prefix: 'glioma' },
+  { name: 'Meningioma', desc: 'Tumors arising from the membranes surrounding the brain. Includes Low Grade, Atypical, Anaplastic, and Transitional types.', prefix: 'meningioma' },
+  { name: 'Neurocytoma', desc: 'Rare tumors typically found in the ventricles of the brain. Includes Central and Extraventricular subtypes.', prefix: 'neurocytoma' },
+  { name: 'Other Injuries', desc: 'Non-tumor lesions including Abscesses, Cysts, and various Encephalopathies.', prefix: 'other' },
+  { name: 'Schwannoma', desc: 'Usually benign tumors arising from nerve-sheath cells. Includes Acoustic, Vestibular, and Trigeminal types.', prefix: 'schwannoma' },
+  { name: 'NORMAL', desc: 'Standard brain tissue with no detectable tumorous or pathological lesions.', prefix: 'normal' },
+];
+
+function getImages(prefix: string, is17: boolean): string[] {
+  if (is17) {
+    return [`/tumorimages/convext/${prefix}.jpg`];
+  }
   const exts: Record<string, string[]> = {
     astrocytoma: ['jpg', 'jpg', 'jpg'],
     carcinoma: ['jpg', 'jpg', 'png'],
@@ -47,8 +59,11 @@ function getImages(prefix: string): string[] {
 
 export default function TumorInfo() {
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'44' | '17'>('44');
 
-  const filtered = tumorData.filter(t =>
+  const data = activeTab === '44' ? tumorData : tumorData17;
+
+  const filtered = data.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -61,21 +76,65 @@ export default function TumorInfo() {
         >
           <h1 className="section-title">Tumor Type Information</h1>
           <p className="section-subtitle" style={{ marginBottom: 32 }}>
-            All current tumor types in the <span className="accent-text">BTIS</span> database
-            that our model can detect
+            Knowledge base for the tumor types detected by our models
           </p>
         </motion.div>
+
+        {/* Tabs */}
+        <div style={{ 
+          display: 'flex', 
+          gap: 8, 
+          marginBottom: 32, 
+          background: 'rgba(255,255,255,0.03)', 
+          padding: 4, 
+          borderRadius: 'var(--radius-md)',
+          width: 'fit-content'
+        }}>
+          <button 
+            onClick={() => setActiveTab('44')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 'calc(var(--radius-md) - 2px)',
+              background: activeTab === '44' ? 'var(--accent-color)' : 'transparent',
+              color: activeTab === '44' ? 'white' : 'var(--text-muted)',
+              border: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            BTIS 44 Classification
+          </button>
+          <button 
+            onClick={() => setActiveTab('17')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: 'calc(var(--radius-md) - 2px)',
+              background: activeTab === '17' ? 'var(--accent-color)' : 'transparent',
+              color: activeTab === '17' ? 'white' : 'var(--text-muted)',
+              border: 'none',
+              fontSize: '0.85rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            ConVext 17 Classification
+          </button>
+        </div>
 
         <motion.div
           className="search-bar"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
+          style={{ marginBottom: 32 }}
         >
           <Search size={18} className="search-icon" />
           <input
             type="text"
-            placeholder="Search tumor types..."
+            placeholder={`Search ${activeTab === '44' ? '44-class' : '17-class'} types...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -84,10 +143,10 @@ export default function TumorInfo() {
         <div className="tumor-grid">
           {filtered.map((tumor, i) => (
             <TumorCard
-              key={tumor.name}
+              key={`${activeTab}-${tumor.name}`}
               name={tumor.name}
               description={tumor.desc}
-              images={getImages(tumor.prefix)}
+              images={getImages(tumor.prefix, activeTab === '17')}
               index={i}
             />
           ))}

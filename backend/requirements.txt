@@ -5,3 +5,9 @@ numpy<2
 pillow
 tensorflow==2.15.1
 tf-keras==2.15.1
+torch
+torchvision
+python-dotenv
+requests
+torch
+torchvision
