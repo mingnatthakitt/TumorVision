@@ -24,8 +24,13 @@ custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
 
 # --- Model Configurations ---
 MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+MODEL_44_PATH = os.path.join(MODEL_DIR, "efficientnetv2-s-BTI44impact-97.62.h5")
+# The user might have renamed the file in the repo. Let's check the filename again.
+# In the old version it was "efficientnetv2-s-BTI44impact-97.62.h5".
+# I'll use a dynamic check.
 
-# Full 44 Labels (As per stable v2.0)
+MODEL_17_PATH = os.path.join(MODEL_DIR, "brain_tumor_convnext_tiny_scripted.pt")
+
 CLASS_LABELS_44 = [
     'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2',
     'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
