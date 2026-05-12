@@ -1,3 +1,13 @@
+---
+title: TumorVision
+emoji: 🧠
+colorFrom: gray
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 
 # <img src="frontend/public/TumorVisionLOGO-removebg.png" width="48" height="48" valign="middle"> TumorVision
 
