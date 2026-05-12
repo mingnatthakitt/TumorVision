@@ -1,5 +1,6 @@
 import os
 import io
+import base64
 import torch
 import torchvision.transforms as T
 import numpy as np
@@ -9,22 +10,65 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# --- Custom Layer for EfficientNetV2 ---
+try:
+    from tf_keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
+except ImportError:
+    from tensorflow.keras.layers import DepthwiseConv2D as OriginalDepthwiseConv2D
+
+class CustomDepthwiseConv2D(OriginalDepthwiseConv2D):
+    def __init__(self, *args, **kwargs):
+        kwargs.pop('groups', None)
+        super(CustomDepthwiseConv2D, self).__init__(*args, **kwargs)
+
+custom_objects = {'DepthwiseConv2D': CustomDepthwiseConv2D}
+
 # --- Model Configurations ---
-MODEL_44_PATH = "backend/models/brain_tumor_efficientnetv2_s_finetuned.h5"
-MODEL_17_PATH = "backend/models/brain_tumor_convnext_tiny_scripted.pt"
+MODEL_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
+MODEL_44_PATH = os.path.join(MODEL_DIR, "brain_tumor_efficientnetv2_s_finetuned.h5")
+# The user might have renamed the file in the repo. Let's check the filename again.
+# In the old version it was "efficientnetv2-s-BTI44impact-97.62.h5".
+# I'll use a dynamic check.
+
+MODEL_17_PATH = os.path.join(MODEL_DIR, "brain_tumor_convnext_tiny_scripted.pt")
+
 CLASS_LABELS_44 = [
-    'Astrocitoma (Grado II)', 'Astrocitoma (Grado III)', 'Astrocitoma (Grado IV)',
-    'Carcinoma', 'Ependimoma (Grado II)', 'Ependimoma (Grado III)',
-    'Ganglioglioma (Grado I)', 'Ganglioglioma (Grado II)', 'Germinoma',
-    'Glioblastoma (Grado IV)', 'Granuloma', 'Meduloblastoma (Grado IV)',
-    'Meningioma (Grado I)', 'Meningioma (Grado II)', 'Meningioma (Grado III)',
-    'Neurocitoma (Grado II)', 'Oligodendroglioma (Grado II)', 'Oligodendroglioma (Grado III)',
-    'Papiloma (Grado I)', 'Papiloma (Grado II)', 'Papiloma (Grado III)',
-    'Schwannoma (Grado I)', 'Schwannoma (Grado II)', 'Tuberculoma', 'Normal'
+    'Astrocitoma T1', 'Astrocitoma T1C+', 'Astrocitoma T2',
+    'Carcinoma T1', 'Carcinoma T1C+', 'Carcinoma T2',
+    'Ependimoma T1', 'Ependimoma T1C+', 'Ependimoma T2',
+    'Ganglioglioma T1', 'Ganglioglioma T1C+', 'Ganglioglioma T2',
+    'Germinoma T1', 'Germinoma T1C+', 'Germinoma T2',
+    'Glioblastoma T1', 'Glioblastoma T1C+', 'Glioblastoma T2',
+    'Granuloma T1', 'Granuloma T1C+', 'Granuloma T2',
+    'Meduloblastoma T1', 'Meduloblastoma T1C+', 'Meduloblastoma T2',
+    'Meningioma T1', 'Meningioma T1C+', 'Meningioma T2',
+    'Neurocitoma T1', 'Neurocitoma T1C+', 'Neurocitoma T2',
+    'Oligodendroglioma T1', 'Oligodendroglioma T1C+', 'Oligodendroglioma T2',
+    'Papiloma T1', 'Papiloma T1C+', 'Papiloma T2',
+    'Schwannoma T1', 'Schwannoma T1C+', 'Schwannoma T2',
+    'Tuberculoma T1', 'Tuberculoma T1C+', 'Tuberculoma T2',
+    '_NORMAL T1', '_NORMAL T2'
 ]
-# Note: Simplified for display, using indices for others. 
-# We'll use these labels for the top 3.
-CLASS_LABELS_17 = ["Glioma", "Meningioma", "Neurocytoma", "Other Injuries", "Schwannoma", "Normal"]
+
+CLASS_LABELS_17 = [
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1',
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T1C+',
+    'Glioma (Astrocitoma, Ganglioglioma, Glioblastoma, Oligodendroglioma, Ependimoma) T2',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T1C+',
+    'Meningioma (Low Grade, Atypical, Anaplastic, Transitional) T2',
+    'NORMAL T1',
+    'NORMAL T2',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T1',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T1C+',
+    'Neurocitoma (Central - Intraventricular, Extraventricular) T2',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T1C+',
+    'Other Types of Injuries (Abscesses, Cysts, Miscellaneous Encephalopathies) T2',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T1C+',
+    'Schwannoma (Acoustic, Vestibular - Trigeminal) T2'
+]
 
 # Global model placeholders
 model_44 = None
@@ -45,40 +89,30 @@ def gpu_decorator(func):
     return func
 
 def load_tumor_models():
-    """Load both diagnostic models into memory."""
+    """Load both diagnostic models."""
     global model_44, model_17
     
-    # Load 44-class (TensorFlow)
-    if os.path.exists(MODEL_44_PATH):
-        try:
-            model_44 = tf.keras.models.load_model(MODEL_44_PATH)
-            print("Loaded 44-class model.")
-        except Exception as e:
-            print(f"Error loading 44-class model: {e}")
+    # Identify actual filenames in the models directory
+    if os.path.exists(MODEL_DIR):
+        files = os.listdir(MODEL_DIR)
+        h5_files = [f for f in files if f.endswith('.h5')]
+        if h5_files:
+            path_44 = os.path.join(MODEL_DIR, h5_files[0])
+            try:
+                model_44 = tf.keras.models.load_model(path_44, custom_objects=custom_objects, compile=False)
+                print(f"Loaded 44-class model: {path_44}")
+            except Exception as e:
+                print(f"Error loading 44-class model: {e}")
 
-    # Load 17-class (PyTorch)
-    if os.path.exists(MODEL_17_PATH):
-        try:
-            model_17 = torch.jit.load(MODEL_17_PATH)
-            model_17.eval()
-            print("Loaded 17-class model.")
-        except Exception as e:
-            print(f"Error loading 17-class model: {e}")
-
-def preprocess_image(image_bytes, model_type):
-    """Preprocess image based on model requirements."""
-    img = Image.open(image_bytes).convert('RGB')
-    if model_type == "44BTIS":
-        img = img.resize((224, 224))
-        img_array = np.array(img)
-        return np.expand_dims(img_array, axis=0)
-    else:
-        preprocess = T.Compose([
-            T.Resize((224, 224)),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-        return preprocess(img).unsqueeze(0)
+        pt_files = [f for f in files if f.endswith('.pt')]
+        if pt_files:
+            path_17 = os.path.join(MODEL_DIR, pt_files[0])
+            try:
+                model_17 = torch.jit.load(path_17, map_location="cpu")
+                model_17.eval()
+                print(f"Loaded 17-class model: {path_17}")
+            except Exception as e:
+                print(f"Error loading 17-class model: {e}")
 
 @gpu_decorator
 def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> dict:
@@ -86,30 +120,32 @@ def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> di
     Runs MedGemma 1.5 4B for clinical verification using HF ZeroGPU.
     """
     global medgemma_processor, medgemma_model
-    
     from transformers import AutoProcessor, AutoModelForImageTextToText
     import torch
     from PIL import Image
 
     model_id = "google/medgemma-1.5-4b-it"
+    hf_token = os.getenv("HF_TOKEN")
     
     try:
         if medgemma_processor is None:
-            medgemma_processor = AutoProcessor.from_pretrained(model_id)
+            medgemma_processor = AutoProcessor.from_pretrained(model_id, token=hf_token)
 
         if medgemma_model is None:
             medgemma_model = AutoModelForImageTextToText.from_pretrained(
                 model_id,
                 torch_dtype=torch.bfloat16,
                 device_map="auto",
-                load_in_4bit=True
+                load_in_4bit=True,
+                token=hf_token
             )
 
+        image_bytes.seek(0)
         image = Image.open(image_bytes).convert("RGB")
         prompt = (
-            f"System: You are a senior neuroradiologist. Verify this MRI prediction.\n"
-            f"User: Prediction results: {prediction_results}. "
-            f"Please provide a 1-sentence final diagnosis and a brief radiological explanation."
+            f"System: You are a senior neuroradiologist. Analyze this brain MRI.\n"
+            f"User: The AI classifier suggests: {prediction_results}. "
+            f"Provide a 1-sentence final diagnosis and a brief radiological explanation."
         )
         
         messages = [{"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": prompt}]}]
@@ -126,45 +162,48 @@ def verify_with_medgemma(image_bytes: io.BytesIO, prediction_results: str) -> di
             "verified_answer": response.split('.')[0] + '.', 
             "explanation": response.strip()
         }
-
     except Exception as e:
-        return {
-            "verified_answer": "Verification Unavailable", 
-            "explanation": f"MedGemma error: {str(e)}"
-        }
+        return {"verified_answer": "Verification Unavailable", "explanation": f"MedGemma error: {str(e)}"}
 
 def predict_tumor(image_bytes: io.BytesIO, model_type: str = "44BTIS", run_verification: bool = False) -> dict:
     """Main prediction pipeline."""
-    image_bytes.seek(0)
-    image = preprocess_image(image_bytes, model_type)
-    
-    if model_type == "17ConVext":
-        if model_17 is None: return {"error": "17-class model not loaded."}
-        with torch.no_grad():
-            output = model_17(image)
-            probs = torch.softmax(output, dim=1)[0]
-            # Map top indices
-            top_3_vals, top_3_idx = torch.topk(probs, 3)
-            predictions = [
-                {"label": CLASS_LABELS_17[int(idx)] if int(idx) < len(CLASS_LABELS_17) else f"Type {idx}", 
-                 "confidence": round(float(val) * 100, 2)} 
-                for val, idx in zip(top_3_vals, top_3_idx)
-            ]
-    else:
-        if model_44 is None: return {"error": "44-class model not loaded."}
-        preds = model_44.predict(image)[0]
-        top_3_idx = np.argsort(preds)[-3:][::-1]
+    try:
+        image_bytes.seek(0)
+        img = Image.open(image_bytes).convert('RGB')
+        
+        if model_type == "44BTIS":
+            if model_44 is None: return {"error": "44-class model not loaded."}
+            img_res = img.resize((224, 224))
+            img_array = np.array(img_res)
+            img_array = np.expand_dims(img_array, axis=0)
+            preds = model_44.predict(img_array)[0]
+            labels = CLASS_LABELS_44
+        else:
+            if model_17 is None: return {"error": "17-class model not loaded."}
+            preprocess = T.Compose([
+                T.Resize((224, 224)),
+                T.ToTensor(),
+                T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+            ])
+            input_tensor = preprocess(img).unsqueeze(0)
+            with torch.no_grad():
+                outputs = model_17(input_tensor)
+                preds = torch.softmax(outputs, dim=1)[0].numpy()
+            labels = CLASS_LABELS_17
+
+        top_3_idx = np.argsort(preds)[::-1][:3]
         predictions = [
-            {"label": CLASS_LABELS_44[int(idx)] if int(idx) < len(CLASS_LABELS_44) else f"Type {idx}", 
-             "confidence": round(float(preds[idx]) * 100, 2)} 
+            {"label": labels[idx], "confidence": round(float(preds[idx]) * 100, 2)} 
             for idx in top_3_idx
         ]
 
-    results = {"model_type": model_type, "predictions": predictions}
+        results = {"model_type": model_type, "predictions": predictions}
 
-    if run_verification:
-        pred_str = ", ".join([f"{p['label']} ({p['confidence']}%)" for p in predictions])
-        image_bytes.seek(0)
-        results["medgemma_verification"] = verify_with_medgemma(image_bytes, pred_str)
+        if run_verification:
+            pred_str = ", ".join([f"{p['label']} ({p['confidence']}%)" for p in predictions])
+            image_bytes.seek(0)
+            results["medgemma_verification"] = verify_with_medgemma(image_bytes, pred_str)
 
-    return results
+        return results
+    except Exception as e:
+        return {"error": f"Internal logic error: {str(e)}"}
