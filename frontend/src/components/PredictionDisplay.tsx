@@ -37,7 +37,8 @@ export default function PredictionDisplay({
 
       <div style={{ marginBottom: 24 }}>
         {predictions.map((pred, i) => {
-          const rankClass = `rank-${pred.rank}` as const;
+          const rank = i + 1;
+          const rankClass = `rank-${rank}` as const;
           return (
             <motion.div
               key={pred.label}
@@ -47,7 +48,7 @@ export default function PredictionDisplay({
               transition={{ delay: i * 0.15, duration: 0.4 }}
             >
               <div className={`prediction-rank-badge ${rankClass}`}>
-                #{pred.rank}
+                #{rank}
               </div>
               <div className="prediction-info">
                 <p className="prediction-label">{pred.label}</p>
@@ -55,13 +56,13 @@ export default function PredictionDisplay({
                   <motion.div
                     className={`prediction-bar-fill ${rankClass}`}
                     initial={{ width: 0 }}
-                    animate={{ width: `${pred.probability}%` }}
+                    animate={{ width: `${pred.confidence}%` }}
                     transition={{ delay: i * 0.15 + 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </div>
               </div>
               <span className={`prediction-probability ${rankClass}`}>
-                {pred.probability.toFixed(1)}%
+                {pred.confidence.toFixed(1)}%
               </span>
             </motion.div>
           );

@@ -3,15 +3,17 @@
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
 export interface Prediction {
-  rank: number;
   label: string;
-  probability: number;
+  confidence: number;
 }
 
 export interface PredictionResponse {
   predictions: Prediction[];
-  verification?: string;
-  model_used?: string;
+  medgemma_verification?: {
+    verified_answer: string;
+    explanation: string;
+  };
+  model_type?: string;
 }
 
 export async function predictTumor(
