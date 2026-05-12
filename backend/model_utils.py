@@ -1,4 +1,7 @@
 import os
+# Force legacy Keras before importing tensorflow to avoid lambda layer warning
+os.environ["TF_USE_LEGACY_KERAS"] = "1"
+
 import io
 import torch
 import torchvision.transforms as T
@@ -101,7 +104,8 @@ def load_tumor_models():
             path_44 = os.path.join(MODEL_DIR, h5_files[0])
             try:
                 # Use compile=False to avoid issues, but we'll compile with original settings
-                model_44 = tf.keras.models.load_model(path_44, custom_objects=custom_objects, compile=False)
+                import tf_keras
+                model_44 = tf_keras.models.load_model(path_44, custom_objects=custom_objects, compile=False)
                 model_44.compile(optimizer='Adamax', loss='categorical_crossentropy')
                 print(f"Loaded 44-class model: {path_44}")
             except Exception as e:
