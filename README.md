@@ -66,6 +66,10 @@ TumorVision is a medical diagnostic platform designed to support healthcare prof
 | **Recall** | **97.0%** | Sensitivity to tumor detection. |
 | **F1-Score** | **97.0%** | Robustness across all 17 categories. |
 
+<p align="center">
+  <img src="docs/training/ConVextConfMet.png" width="55%" />
+</p>
+
 #### Model Architecture Overview
 The **ConvNeXt-Tiny** architecture is a modern pure-convolutional network that competes with Vision Transformers in performance while maintaining the efficiency and simplicity of standard convolutions.
 
