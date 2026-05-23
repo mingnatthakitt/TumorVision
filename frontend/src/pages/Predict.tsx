@@ -7,7 +7,7 @@ import { predictTumor, checkHealth, type Prediction } from '../api/predict';
 export default function Predict() {
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
   const [verification, setVerification] = useState<{ verified_answer: string, explanation: string } | null>(null);
-  const [modelType, setModelType] = useState<string>('44BTIS');
+  const [modelType, setModelType] = useState<string>('17ConVext');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastFile, setLastFile] = useState<File | null>(null);
@@ -118,7 +118,7 @@ export default function Predict() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                 <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{m.name}</span>
-                {modelType === m.id && <span style={{ color: 'var(--accent-color)', fontSize: '0.8rem' }}>● Active</span>}
+                {modelType === m.id && <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.9)' }}><span style={{ color: '#10b981' }}>●</span> Active</span>}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: 2 }}>✓ {m.pros}</div>
               <div style={{ fontSize: '0.75rem', color: '#f87171' }}>✗ {m.cons}</div>
