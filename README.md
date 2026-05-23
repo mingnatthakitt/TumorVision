@@ -56,7 +56,8 @@ TumorVision is a medical diagnostic platform designed to support healthcare prof
 | **F1-Score** | **97.0%** | Robustness across all 17 categories. |
 
 <p align="center">
-  <img src="docs/training/ConVextConfMet.png" width="55%" />
+  <img src="docs/training/ConVextCVFold.png" width="55%" />
+  <img src="docs/training/ConVextConfMet.png" width="40%" />
 </p>
 
 #### Model Architecture Overview
