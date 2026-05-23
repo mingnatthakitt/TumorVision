@@ -12,12 +12,12 @@ interface Props {
   model_used?: string;
 }
 
-export default function PredictionDisplay({ 
-  predictions, 
-  verification, 
-  isLoadingVerification, 
-  onVerify, 
-  model_used 
+export default function PredictionDisplay({
+  predictions,
+  verification,
+  isLoadingVerification,
+  onVerify,
+  model_used
 }: Props) {
   return (
     <motion.div
@@ -37,8 +37,7 @@ export default function PredictionDisplay({
 
       <div style={{ marginBottom: 24 }}>
         {predictions.map((pred, i) => {
-          const rank = i + 1;
-          const rankClass = `rank-${rank}` as const;
+          const rankClass = `rank-${pred.rank}` as const;
           return (
             <motion.div
               key={pred.label}
@@ -48,7 +47,7 @@ export default function PredictionDisplay({
               transition={{ delay: i * 0.15, duration: 0.4 }}
             >
               <div className={`prediction-rank-badge ${rankClass}`}>
-                #{rank}
+                #{pred.rank}
               </div>
               <div className="prediction-info">
                 <p className="prediction-label">{pred.label}</p>
@@ -56,13 +55,13 @@ export default function PredictionDisplay({
                   <motion.div
                     className={`prediction-bar-fill ${rankClass}`}
                     initial={{ width: 0 }}
-                    animate={{ width: `${pred.confidence}%` }}
+                    animate={{ width: `${pred.probability}%` }}
                     transition={{ delay: i * 0.15 + 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   />
                 </div>
               </div>
               <span className={`prediction-probability ${rankClass}`}>
-                {pred.confidence.toFixed(1)}%
+                {pred.probability.toFixed(1)}%
               </span>
             </motion.div>
           );
@@ -93,13 +92,13 @@ export default function PredictionDisplay({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, #FFD700, #FFA500)', 
-              width: 24, 
-              height: 24, 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+              width: 24,
+              height: 24,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
               fontSize: '0.7rem'
             }}>
@@ -109,9 +108,9 @@ export default function PredictionDisplay({
               MedGemma 1.5 4B Verification
             </h4>
           </div>
-          <div style={{ 
-            background: 'rgba(255,255,255,0.03)', 
-            padding: '16px', 
+          <div style={{
+            background: 'rgba(255,255,255,0.03)',
+            padding: '16px',
             borderRadius: 'var(--radius-md)',
             border: '1px solid rgba(255,215,0,0.1)'
           }}>
@@ -123,17 +122,17 @@ export default function PredictionDisplay({
               </div>
             ) : (
               <>
-                <p style={{ 
-                  color: '#FFD700', 
-                  fontSize: '1rem', 
+                <p style={{
+                  color: '#ffbe45ff',
+                  fontSize: '1rem',
                   fontWeight: 700,
                   marginBottom: 8
                 }}>
                   {verification?.verified_answer}
                 </p>
-                <p style={{ 
-                  color: 'rgba(255,255,255,0.9)', 
-                  fontSize: '0.85rem', 
+                <p style={{
+                  color: 'rgba(255,255,255,0.9)',
+                  fontSize: '0.85rem',
                   lineHeight: 1.6,
                   fontStyle: 'italic'
                 }}>

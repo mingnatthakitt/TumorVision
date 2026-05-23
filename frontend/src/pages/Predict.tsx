@@ -6,7 +6,7 @@ import { predictTumor, checkHealth, type Prediction } from '../api/predict';
 
 export default function Predict() {
   const [predictions, setPredictions] = useState<Prediction[] | null>(null);
-  const [verification, setVerification] = useState<{verified_answer: string, explanation: string} | null>(null);
+  const [verification, setVerification] = useState<{ verified_answer: string, explanation: string } | null>(null);
   const [modelType, setModelType] = useState<string>('44BTIS');
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -52,17 +52,17 @@ export default function Predict() {
   };
 
   const models = [
-    { 
-      id: '44BTIS', 
-      name: '44-Class BTIS', 
-      pros: 'Specific diagnostic mapping (44 types)', 
-      cons: 'Prone to false positives in edge cases' 
+    {
+      id: '17ConVext',
+      name: '17-Class ConVext',
+      pros: 'Better generalization, higher stability',
+      cons: 'Grouped classes (less granular)'
     },
-    { 
-      id: '17ConVext', 
-      name: '17-Class ConVext', 
-      pros: 'Better generalization, higher stability', 
-      cons: 'Grouped classes (less granular)' 
+    {
+      id: '44BTIS',
+      name: '44-Class BTIS',
+      pros: 'Specific diagnostic mapping (44 types)',
+      cons: 'Prone to false positives in edge cases'
     }
   ];
 
@@ -187,12 +187,12 @@ export default function Predict() {
 
         {/* Results */}
         {predictions && (
-          <PredictionDisplay 
-            predictions={predictions} 
-            verification={verification || undefined} 
+          <PredictionDisplay
+            predictions={predictions}
+            verification={verification || undefined}
             isLoadingVerification={isVerifying}
             onVerify={handleVerify}
-            model_used={models.find(m => m.id === modelType)?.name} 
+            model_used={models.find(m => m.id === modelType)?.name}
           />
         )}
       </div>
