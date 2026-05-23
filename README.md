@@ -1,3 +1,13 @@
+---
+title: TumorVision
+emoji: 🧠
+colorFrom: gray
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 
 # <img src="frontend/public/TumorVisionLOGO-removebg.png" width="48" height="48" valign="middle"> TumorVision
 
@@ -179,6 +189,7 @@ The model was rigorously evaluated across 44 distinct classes using a test set o
 #### Performance Metrics
 - **Overall Accuracy: 97.0%**
 - **Validation**: 96.69% average accuracy achieved via 5-fold cross-validation.
+
 
 | Metric | Score | Description |
 | :--- | :--- | :--- |
